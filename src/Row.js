@@ -1,42 +1,84 @@
 import React, { useState, useEffect } from "react";
 import axios from "./axios";
 import "./Row.css";
+import MovieModal from "./MovieModal";
+import ArrowForwardIosIcon from "@material-ui/icons/ArrowForwardIos";
+import ArrowBackIosIcon from "@material-ui/icons/ArrowBackIos";
 
-const base_url = "https://image.tmdb.org/t/p/original/";
+const Row = ({ title, fetchUrl, isLargeRow, id }) => {
+  const base_url = "https://image.tmdb.org/t/p/original/";
+  const [movies, setMovies] = useState([]);
+  const [modalVisibility, setModalVisibility] = useState(false);
+  const [movieSelected, setMovieSelection] = useState({});
 
-function Row({ title, fetchUrl }) {
-  const [movies, SetMovies] = useState([]);
-
-  //   Snippet of Code
+  //A snippet of code which runs based on a specific condition/variable
   useEffect(() => {
+    //if [], run once when the row loads, and dont run again
+
     async function fetchData() {
+      //Dont move until we get the API answer
       const request = await axios.get(fetchUrl);
-      SetMovies(request.data.results);
+      // GET REQUEST  = "https://api.themoviedb.org/3/fetchUrl"
+      setMovies(request.data.results);
       return request;
     }
+
     fetchData();
   }, [fetchUrl]);
 
-  console.log(movies);
-
+  const handleClick = movie => {
+    setModalVisibility(true);
+    setMovieSelection(movie);
+  };
   return (
-    <div className="row">
+    <section className="row">
+      {/** TITLE */}
       <h2>{title}</h2>
-
-      <div className="row__posters">
-        {/* saveral row_poster(s) */}
-        {movies.map(movie => (
-          <img
-            key={movie.id}
-            className="row__poster"
-            src={`${base_url}${movie.poster_path}`}
-            alt={movie.name}
-          />
-        ))}
+      <div class="slider">
+        <div className="slider__arrow-left">
+          <span
+            className="arrow"
+            onClick={() => {
+              document.getElementById(id).scrollLeft -= window.innerWidth - 80;
+            }}
+          >
+            <ArrowBackIosIcon />
+          </span>
+        </div>
+        <div id={id} className="row__posters">
+          {/**SEVERAL ROW__POSTER */}
+          {movies.map(movie => (
+            <img
+              key={movie.id}
+              onClick={() => handleClick(movie)}
+              className={`row__poster ${isLargeRow && "row__posterLarge"}`}
+              src={`${base_url}${
+                isLargeRow ? movie.poster_path : movie.backdrop_path
+              }`}
+              loading="lazy"
+              alt={movie.name}
+            />
+          ))}
+        </div>
+        <div className="slider__arrow-right">
+          <span
+            className="arrow"
+            onClick={() => {
+              document.getElementById(id).scrollLeft += window.innerWidth - 80;
+            }}
+          >
+            <ArrowForwardIosIcon />
+          </span>
+        </div>
       </div>
-      {/* container -> posters */}
-    </div>
+      {modalVisibility && (
+        <MovieModal
+          {...movieSelected}
+          setModalVisibility={setModalVisibility}
+        />
+      )}
+    </section>
   );
-}
+};
 
 export default Row;
